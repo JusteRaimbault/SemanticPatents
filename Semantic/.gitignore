@@ -1,0 +1,37 @@
+classification
+
+processed
+processed_old
+#probas
+probasfung
+probas_
+probas_rdata
+res/patentlevel_origs.RData
+res/patentlevel_orig.RData
+res/full-overlaps.RData
+
+.ipynb_checkpoints
+test
+
+pickled
+__pycache__
+
+gml
+
+# particular proba files
+probaswindow
+probas.zip
+
+probas_count
+probas_count_
+probascounts.zip
+probas_cprocessed
+probasprocessed.zip
+keywordscountextended.zip
+probas_count_extended
+
+# merging ?
+#probas_count_extended
+
+probas_20161116
+
