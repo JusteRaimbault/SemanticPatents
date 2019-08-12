@@ -1,12 +1,14 @@
 import pymongo
 
 
+MONGOPATH = open('.mongopath').readlines()[0]
+
+# construct a unique mongo client
+mongo = pymongo.MongoClient(MONGOPATH)
 
 
 
-
-
-##
+#
 #  Given large occurence dico, extracts corresponding subdico
 #  assumes large dicos contains all subcorpus.
 #  @returns [p_kw_dico,kw_p_dico]
@@ -37,8 +39,15 @@ def extract_sub_dicos(corpus,occurence_dicos) :
 
 ##
 #  export to mongo
-def export_kw_dico(database,collection,p_kw_dico,year):
-    mongo = pymongo.MongoClient('mongodb://root:root@127.0.0.1:29019')
+def export_kw_dico(database,collection,p_kw_dico,year,keywordfield="keywords"):
+    """
+    Exports potential keywords to database, for each record.
+
+    :database: name of the database in which the export is done
+    :collection: name of the collection in which the export is done
+    :p_kw_dico: dictionary to be exported, keys are records id, values are string lists (multi-stems)
+    :year:
+    """
     database = mongo[database]
     col = database[collection]
     col.create_index("id")
@@ -46,13 +55,12 @@ def export_kw_dico(database,collection,p_kw_dico,year):
     data = []
 
     for p in p_kw_dico.keys() :
-        data.append({"id":p,"keywords":p_kw_dico[p],"year":str(year)})
+        data.append({"id":p,keywordfield:p_kw_dico[p],"year":str(year)})
 
     col.insert_many(data)
 
 
 def export_set_dico(database,collection,dico,fields):
-    mongo = pymongo.MongoClient('mongodb://root:root@127.0.0.1:29019')
     database = mongo[database]
     col = database[collection]
     col.create_index(fields[0])
@@ -62,7 +70,6 @@ def export_set_dico(database,collection,dico,fields):
     col.insert_many(data)
 
 def import_kw_dico(database,collection,years,yearfield):
-    mongo = pymongo.MongoClient('mongodb://root:root@127.0.0.1:29019')
     database = mongo[database]
     col = database[collection]
 
@@ -81,28 +88,32 @@ def import_kw_dico(database,collection,years,yearfield):
 
 
 
-# get patent id
-def get_patent_id(cursor_raw):
-    return(cursor_raw[0].encode('ascii','ignore'))
+# get patent id -> not needed in python 3
+#def get_patent_id(cursor_raw):
+#    return(cursor_raw[0].encode('ascii','ignore'))
 
 
 
-def get_patent_data(db,collection,years,yearfield,limit,full=True):
-    mongo = pymongo.MongoClient('mongodb://root:root@127.0.0.1:29019')
+def get_patent_data(db,collection,years,yearfield,limit,full=True,abstractfield="abstract",textfields={"id":1,"title":1,"abstract":1}):
+    """
+    Requires the id field (and to be a number)
+    """
     database = mongo[db]
     col = database[collection]
     if full :
-        data = col.find({yearfield:{"$in":years},"id":{"$regex":r'^[0-9]'},"abstract":{"$regex":r'.'}},{"id":1,"title":1,"abstract":1})#.limit(limit)
+        data = col.find({yearfield:{"$in":years},"id":{"$regex":r'^[0-9]'},abstractfield:{"$regex":r'.'}},textfields)#.limit(limit)
     else :
         data = col.find({yearfield:{"$in":years},"id":{"$regex":r'^[0-9]'}},{"id":1})
     res=[]
     for row in data :
         #print row
-        i=""
-        if 'id' in row : i = row['id']
-        title = ""
-        if 'title' in row : title = row['title']
-        abstract = ""
-        if 'abstract' in row : abstract = row['abstract']
-        res.append([i,title,abstract])
+        rec={}
+        for field in textfields.keys():
+            if field in row :
+                #rec.append(row[field])
+                rec[field]=row[field]
+            else :
+                #rec.append("")
+                rec[field]=""
+        res.append(rec)
     return(res)

@@ -22,6 +22,7 @@ TASK=$1
 # generate year files
 
 cd TextProcessing
+mkdir kwyears
 
 #remove old
 for file in `seq 1 $NRUNS`
@@ -59,7 +60,7 @@ fi
 
 cd ../Semantic
 #echo "Semantic construction..."
-
+mkdir relevantyears
 
 # year files slightly different for R
 for file in `seq 1 $NRUNS`
